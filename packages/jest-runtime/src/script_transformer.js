@@ -151,24 +151,35 @@ export default class ScriptTransformer {
     return transform;
   }
 
-  _instrumentFile(filename: Path, content: string): string {
-    return babelTransform(content, {
+  _instrumentFile(filename: Path, input: TransformedSource): TransformedSource {
+    const istanbulConfig: any = {
+      compact: false,
+      // files outside `cwd` will not be instrumented
+      cwd: this._config.rootDir,
+      exclude: [],
+      useInlineSourceMaps: false,
+    }
+    // inject source map if we have it
+    if (input.map) {
+      istanbulConfig.inputSourceMap = input.map;
+    }
+
+    // instrument with babel-plugin-istanbul
+    const transformed = babelTransform(input.code, {
       auxiliaryCommentBefore: ' istanbul ignore next ',
       babelrc: false,
       filename,
       plugins: [
-        [
-          babelPluginIstanbul,
-          {
-            compact: false,
-            // files outside `cwd` will not be instrumented
-            cwd: this._config.rootDir,
-            exclude: [],
-            useInlineSourceMaps: false,
-          },
-        ],
+        [babelPluginIstanbul,istanbulConfig],
       ],
-    }).code;
+      sourceMap: !!input.map,
+    });
+
+    return {
+      code: transformed.code,
+      // ensure we return stringified source map if the input was
+      map: typeof input.map === 'string' ? JSON.stringify(transformed.map) : transformed.map,
+    };
   }
 
   _getRealPath(filepath: Path): Path {
@@ -243,10 +254,9 @@ export default class ScriptTransformer {
     }
 
     if (!transformWillInstrument && instrument) {
-      code = this._instrumentFile(filename, transformed.code);
-    } else {
-      code = transformed.code;
+      transformed = this._instrumentFile(filename, transformed);
     }
+    code = transformed.code;
 
     if (transformed.map) {
       const sourceMapContent =

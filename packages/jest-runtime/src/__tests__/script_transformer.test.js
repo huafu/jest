@@ -364,6 +364,14 @@ describe('ScriptTransformer', () => {
       mappings: ';AAAA',
       version: 3,
     };
+    const expectedMap = {
+      version: 3,
+      sources: ['banana.js'],
+      names: ['content'],
+      mappings: ';;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AAAAA',
+      file: 'banana.js',
+      sourcesContent: ['content'],
+    };
 
     require('preprocessor-with-sourcemaps').process.mockReturnValue({
       code: 'content',
@@ -374,7 +382,7 @@ describe('ScriptTransformer', () => {
       collectCoverage: true,
     });
     expect(result.sourceMapPath).toEqual(expect.any(String));
-    const mapStr = JSON.stringify(map);
+    const mapStr = JSON.stringify(expectedMap);
     expect(writeFileAtomic.sync).toBeCalledWith(result.sourceMapPath, mapStr, {
       encoding: 'utf8',
     });
@@ -388,8 +396,16 @@ describe('ScriptTransformer', () => {
 
     const sourceMap = JSON.stringify({
       mappings: 'AAAA,IAAM,CAAC,GAAW,CAAC,CAAC',
+      sources: ['banana.js'],
       version: 3,
     });
+    const expectedSourceMaps = {
+      version: 3,
+      sources: ['banana.js'],
+      names: [],
+      mappings:
+        ';;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AAAA,IAAM,sDAAY,CAAZ,CAAN',
+    };
 
     const content =
       'var x = 1;\n' +
@@ -404,7 +420,7 @@ describe('ScriptTransformer', () => {
     expect(result.sourceMapPath).toEqual(expect.any(String));
     expect(writeFileAtomic.sync).toBeCalledWith(
       result.sourceMapPath,
-      sourceMap,
+      JSON.stringify(expectedSourceMaps),
       {encoding: 'utf8'},
     );
   });
@@ -419,6 +435,14 @@ describe('ScriptTransformer', () => {
       mappings: ';AAAA',
       version: 3,
     };
+    const expectedMap = {
+      version: 3,
+      sources: ['banana.js'],
+      names: ['content'],
+      mappings: ';;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AAAAA',
+      file: 'banana.js',
+      sourcesContent: ['content'],
+    };
 
     require('preprocessor-with-sourcemaps').process.mockReturnValue({
       code: 'content',
@@ -431,7 +455,7 @@ describe('ScriptTransformer', () => {
     expect(result.sourceMapPath).toEqual(expect.any(String));
     expect(writeFileAtomic.sync).toBeCalledWith(
       result.sourceMapPath,
-      JSON.stringify(map),
+      JSON.stringify(expectedMap),
       {
         encoding: 'utf8',
       },
